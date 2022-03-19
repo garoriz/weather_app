@@ -1,6 +1,13 @@
 package com.example.a2sem.di
 
+import com.example.a2sem.data.WeatherRepositoryImpl
 import com.example.a2sem.data.api.Api
+import com.example.a2sem.data.api.mapper.WeatherMapper
+import com.example.a2sem.domain.repository.WeatherRepository
+import com.example.a2sem.domain.usecase.GetCitiesUseCase
+import com.example.a2sem.domain.usecase.GetWeatherByIdUseCase
+import com.example.a2sem.domain.usecase.GetWeatherByNameUseCase
+import kotlinx.coroutines.Dispatchers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -58,4 +65,24 @@ object DIContainer {
             .build()
             .create(Api::class.java)
     }
+
+    private val weatherRepository: WeatherRepository = WeatherRepositoryImpl(
+        api = api,
+        weatherMapper = WeatherMapper()
+    )
+
+    val getWeatherByNameUseCase: GetWeatherByNameUseCase = GetWeatherByNameUseCase(
+        weatherRepository = weatherRepository,
+        dispatcher = Dispatchers.Default
+    )
+
+    val getCitiesUseCase: GetCitiesUseCase = GetCitiesUseCase(
+        weatherRepository = weatherRepository,
+        dispatcher = Dispatchers.Default
+    )
+
+    val getWeatherByIdUseCase: GetWeatherByIdUseCase = GetWeatherByIdUseCase(
+        weatherRepository = weatherRepository,
+        dispatcher = Dispatchers.Default
+    )
 }
