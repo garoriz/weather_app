@@ -7,8 +7,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.a2sem.data.api.response.cities.CitiesResponse
 import com.example.a2sem.domain.usecase.GetCitiesUseCase
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(
+class MainViewModel @Inject constructor(
     private val getCitiesUseCase: GetCitiesUseCase
 ) : ViewModel() {
 

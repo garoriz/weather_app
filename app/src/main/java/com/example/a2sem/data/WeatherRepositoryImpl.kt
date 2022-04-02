@@ -5,8 +5,9 @@ import com.example.a2sem.data.api.mapper.WeatherMapper
 import com.example.a2sem.data.api.response.cities.CitiesResponse
 import com.example.a2sem.domain.entity.Weather
 import com.example.a2sem.domain.repository.WeatherRepository
+import javax.inject.Inject
 
-class WeatherRepositoryImpl(
+class WeatherRepositoryImpl @Inject constructor(
     private val api: Api,
     private val weatherMapper: WeatherMapper,
 ) : WeatherRepository {

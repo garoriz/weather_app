@@ -10,28 +10,35 @@ import android.view.View
 import android.widget.SearchView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.viewModels
 import com.example.a2sem.R
-import com.example.a2sem.adapter.CityListAdapter
+import com.example.a2sem.presentation.main.adapter.CityListAdapter
 import com.example.a2sem.databinding.FragmentMainBinding
-import com.example.a2sem.di.DIContainer
+import com.example.a2sem.presentation.MainActivity
 import com.example.a2sem.presentation.detailWeather.DetailWeatherFragment
-import com.example.a2sem.utils.ViewModelFactory
+import com.example.a2sem.utils.AppViewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.launch
 import java.lang.Exception
+import javax.inject.Inject
+
+private const val ARG_ID = "id"
+private const val ARG_CITY_NAME = "city_name"
 
 class MainFragment : Fragment(R.layout.fragment_main) {
 
+    @Inject
+    lateinit var factory: AppViewModelFactory
     private var cityListAdapter: CityListAdapter? = null
     private lateinit var binding: FragmentMainBinding
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lat = "55.88"
     private var lon = "49.1"
-    private lateinit var viewModel: MainViewModel
+    var id: Int? = null
+    private val viewModel: MainViewModel by viewModels {
+        factory
+    }
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -46,12 +53,15 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        (activity as MainActivity).appComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding = FragmentMainBinding.bind(view)
 
-        initObjects()
         initObservers()
 
         requestLocationAccess()
@@ -72,14 +82,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                 }
             })
         }
-    }
-
-    private fun initObjects() {
-        val factory = ViewModelFactory(DIContainer)
-        viewModel = ViewModelProvider(
-            this,
-            factory
-        )[MainViewModel::class.java]
     }
 
     private fun initObservers() {
@@ -111,9 +113,20 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
+    private fun getWeatherDetailByName(city: String) {
+        val bundle = Bundle()
+        bundle.putString(ARG_CITY_NAME, city)
+        val detailWeatherFragment = DetailWeatherFragment()
+        detailWeatherFragment.arguments = bundle
+        activity?.supportFragmentManager?.beginTransaction()
+            ?.replace(R.id.container, detailWeatherFragment)
+            ?.addToBackStack("weather")
+            ?.commit()
+    }
+
     private fun getWeatherDetailById(it: Int) {
         val bundle = Bundle()
-        bundle.putInt("id", it)
+        bundle.putInt(ARG_ID, it)
         val detailWeatherFragment = DetailWeatherFragment()
         detailWeatherFragment.arguments = bundle
         activity?.supportFragmentManager?.beginTransaction()
@@ -146,24 +159,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                         lon = location.longitude.toString()
                     }
                 }
-        }
-    }
-
-    private fun getWeatherDetailByName(city: String) {
-        lifecycleScope.launch {
-            try {
-                val bundle = Bundle()
-                val id = DIContainer.getWeatherByNameUseCase(city).id
-                bundle.putInt("id", id)
-                val detailWeatherFragment = DetailWeatherFragment()
-                detailWeatherFragment.arguments = bundle
-                activity?.supportFragmentManager?.beginTransaction()
-                    ?.replace(R.id.container, detailWeatherFragment)
-                    ?.addToBackStack("weather")
-                    ?.commit()
-            } catch (ex: Exception) {
-                showMessage(R.string.not_find_city)
-            }
         }
     }
 
