@@ -8,25 +8,15 @@ import androidx.fragment.app.viewModels
 import coil.load
 import com.example.a2sem.R
 import com.example.a2sem.databinding.FragmentDetailWeatherBinding
-import com.example.a2sem.presentation.MainActivity
-import com.example.a2sem.utils.AppViewModelFactory
-import javax.inject.Inject
+import dagger.hilt.android.AndroidEntryPoint
 
 private const val ARG_CITY_NAME = "city_name"
 
+@AndroidEntryPoint
 class DetailWeatherFragment : Fragment(R.layout.fragment_detail_weather) {
 
-    @Inject
-    lateinit var factory: AppViewModelFactory
     private lateinit var binding: FragmentDetailWeatherBinding
-    private val viewModel: DetailWeatherViewModel by viewModels {
-        factory
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        (activity as MainActivity).appComponent.inject(this)
-        super.onCreate(savedInstanceState)
-    }
+    private val viewModel: DetailWeatherViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

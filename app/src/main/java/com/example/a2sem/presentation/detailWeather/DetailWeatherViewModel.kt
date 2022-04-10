@@ -7,9 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.a2sem.domain.entity.Weather
 import com.example.a2sem.domain.usecase.GetWeatherByIdUseCase
 import com.example.a2sem.domain.usecase.GetWeatherByNameUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@HiltViewModel
 class DetailWeatherViewModel @Inject constructor(
     private val getWeatherByIdUseCase: GetWeatherByIdUseCase,
     private val getWeatherByNameUseCase: GetWeatherByNameUseCase
