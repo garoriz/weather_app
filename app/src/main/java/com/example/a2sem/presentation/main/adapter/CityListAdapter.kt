@@ -1,9 +1,9 @@
-package com.example.a2sem.adapter
+package com.example.a2sem.presentation.main.adapter
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import com.example.a2sem.data.api.response.cities.City
-import com.example.a2sem.diffutils.CityDiffItemCallback
+import com.example.a2sem.presentation.main.diffutils.CityDiffItemCallback
 
 class CityListAdapter(
     private val action: (Int) -> Unit,
