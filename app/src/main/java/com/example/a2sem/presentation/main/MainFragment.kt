@@ -1,35 +1,43 @@
-package com.example.a2sem
+package com.example.a2sem.presentation.main
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.SearchView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.example.a2sem.adapter.CityListAdapter
-import com.example.a2sem.data.WeatherRepository
-import com.example.a2sem.data.api.response.cities.City
+import androidx.fragment.app.viewModels
+import com.example.a2sem.R
+import com.example.a2sem.presentation.main.adapter.CityListAdapter
 import com.example.a2sem.databinding.FragmentMainBinding
+import com.example.a2sem.presentation.MainActivity
+import com.example.a2sem.presentation.detailWeather.DetailWeatherFragment
+import com.example.a2sem.utils.AppViewModelFactory
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.launch
 import java.lang.Exception
+import javax.inject.Inject
+
+private const val ARG_ID = "id"
+private const val ARG_CITY_NAME = "city_name"
 
 class MainFragment : Fragment(R.layout.fragment_main) {
 
+    @Inject
+    lateinit var factory: AppViewModelFactory
     private var cityListAdapter: CityListAdapter? = null
     private lateinit var binding: FragmentMainBinding
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lat = "55.88"
     private var lon = "49.1"
-
-    private val repository by lazy {
-        WeatherRepository()
+    var id: Int? = null
+    private val viewModel: MainViewModel by viewModels {
+        factory
     }
 
     private val locationPermissionLauncher = registerForActivityResult(
@@ -45,29 +53,22 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        (activity as MainActivity).appComponent.inject(this)
+        super.onCreate(savedInstanceState)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding = FragmentMainBinding.bind(view)
 
-        lifecycleScope.launch {
-            requestLocationAccess()
+        initObservers()
 
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        requestLocationAccess()
+        fusedLocationClient =
+            LocationServices.getFusedLocationProviderClient(requireActivity())
 
-            val cities = getCities(lat, lon)
-
-            cityListAdapter = CityListAdapter {
-                getWeatherDetailById(it)
-                cityListAdapter?.submitList(cities)
-            }
-
-            binding.cities.run {
-                adapter = cityListAdapter
-            }
-
-            cityListAdapter?.submitList(cities)
-        }
+        viewModel.onGetCities(lat, lon)
 
         with(binding) {
             svCity.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -83,39 +84,55 @@ class MainFragment : Fragment(R.layout.fragment_main) {
         }
     }
 
-    private fun getWeatherDetailById(it: Int) {
-        lifecycleScope.launch {
-            try {
-                val bundle = Bundle()
-                bundle.putInt("id", it)
-                val detailWeatherFragment = DetailWeatherFragment()
-                detailWeatherFragment.arguments = bundle
-                activity?.supportFragmentManager?.beginTransaction()
-                    ?.replace(R.id.container, detailWeatherFragment)
-                    ?.addToBackStack("weather")
-                    ?.commit()
-            } catch (ex: Exception) {
-                showMessage(R.string.not_find_city)
+    private fun initObservers() {
+        viewModel.cities.observe(viewLifecycleOwner) { it ->
+            it.fold(onSuccess = {
+                val cities = it.list as MutableList
+
+                cityListAdapter = CityListAdapter { clickedCity ->
+                    getWeatherDetailById(clickedCity)
+                    cityListAdapter?.submitList(cities)
+                }
+
+                binding.cities.run {
+                    adapter = cityListAdapter
+                }
+
+                cityListAdapter?.submitList(cities)
+            }, onFailure = {
+                Log.e("e", it.message.toString())
+            })
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) {
+            when (it) {
+                is Exception -> {
+                    showMessage(R.string.not_find_city)
+                }
             }
         }
     }
 
     private fun getWeatherDetailByName(city: String) {
-        lifecycleScope.launch {
-            try {
-                val bundle = Bundle()
-                val id = repository.getWeatherByName(city).id
-                bundle.putInt("id", id)
-                val detailWeatherFragment = DetailWeatherFragment()
-                detailWeatherFragment.arguments = bundle
-                activity?.supportFragmentManager?.beginTransaction()
-                    ?.replace(R.id.container, detailWeatherFragment)
-                    ?.addToBackStack("weather")
-                    ?.commit()
-            } catch (ex: Exception) {
-                showMessage(R.string.not_find_city)
-            }
-        }
+        val bundle = Bundle()
+        bundle.putString(ARG_CITY_NAME, city)
+        val detailWeatherFragment = DetailWeatherFragment()
+        detailWeatherFragment.arguments = bundle
+        activity?.supportFragmentManager?.beginTransaction()
+            ?.replace(R.id.container, detailWeatherFragment)
+            ?.addToBackStack("weather")
+            ?.commit()
+    }
+
+    private fun getWeatherDetailById(it: Int) {
+        val bundle = Bundle()
+        bundle.putInt(ARG_ID, it)
+        val detailWeatherFragment = DetailWeatherFragment()
+        detailWeatherFragment.arguments = bundle
+        activity?.supportFragmentManager?.beginTransaction()
+            ?.replace(R.id.container, detailWeatherFragment)
+            ?.addToBackStack("weather")
+            ?.commit()
     }
 
     private fun requestLocationAccess() {
@@ -143,10 +160,6 @@ class MainFragment : Fragment(R.layout.fragment_main) {
                     }
                 }
         }
-    }
-
-    private suspend fun getCities(lat: String, lon: String): MutableList<City> {
-        return repository.getCities(lat, lon).list as MutableList<City>
     }
 
     private fun showMessage(stringId: Int) {

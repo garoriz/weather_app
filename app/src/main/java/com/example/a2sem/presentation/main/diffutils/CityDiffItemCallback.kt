@@ -1,4 +1,4 @@
-package com.example.a2sem.diffutils
+package com.example.a2sem.presentation.main.diffutils
 
 import androidx.recyclerview.widget.DiffUtil
 import com.example.a2sem.data.api.response.cities.City
