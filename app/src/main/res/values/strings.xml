@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">2sem</string>
+    <string name="not_find_city">Город не найден!</string>
+    <string name="error_getting_location">Не удалось получить местоположение</string>
+    <string name="weather_name">Погода</string>
+    <string name="humidity">Влажность</string>
+    <string name="min_temp">Мин. температура</string>
+    <string name="sunrise">Восход</string>
+    <string name="sunset">Закат</string>
+    <string name="wind_direction">Направление ветра</string>
+    <string name="max_temp">Макс. температура</string>
+    <string name="error">Ошибка</string>
 </resources>
