@@ -1,6 +1,6 @@
 # Weather App
 
-Простое приложение, показывающее погоду.
+Приложение, показывающее погоду.
 
 [Главный экран](https://drive.google.com/file/d/1iTrlfJh3YfUiOW_cDigqsOy3RaqNN-gs/view?usp=sharing)
 
